@@ -13,10 +13,10 @@ Application.ScreenUpdating = False
     Dim varSheetList As Variant
     Dim varRangetoCheck As Variant
     Dim varScope As Variant
-    
+    wetgwqtgw
     Dim SheetListNumber As Integer
     
-    Dim errArr() As Variant
+    Dim errArr() As Variantgaergtwertgw
     ReDim errArr(0 To 5, 0 To 0)
     
         
