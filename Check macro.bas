@@ -123,7 +123,7 @@ Application.ScreenUpdating = False
         
     
     Workbooks(wbMacroFile).Activate
-    Worksheets(wsMacroFileErrorList).Range("B2", Worksheets(wsMacroFileErrorList).Range("G2").End(xlDown)).Clear
+    Worksheets(wsMacroFileErrorList).Range("B2", "Z65000").Clear
     Worksheets(wsMacroFileErrorList).Range("B2").Select
     TransposeAndPrintArray errArr, ActiveWorkbook.Worksheets(wsMacroFileErrorList).[B2]
 
@@ -142,7 +142,7 @@ End Sub
 Sub TransposeAndPrintArray(Data As Variant, Cl As Range)
     Dim tData As Variant
     tData = TransposeArray(Data)
-    Cl.Resize(UBound(tData, 1 + 1), UBound(tData, 2) + 1) = tData
+    Cl.Resize(UBound(tData, 1), UBound(tData, 2) + 1) = tData
 End Sub
 
 Public Function TransposeArray(myarray As Variant) As Variant
@@ -239,4 +239,12 @@ ErrHandler1:
 ErrHandler2:
     MsgBox "Again caught it."
         
+End Sub
+
+
+Sub testleaning()
+    Workbooks("CHECK_macro").Activate
+    Worksheets("Error_list").Range("B2", Worksheets("Error_list").Range("G2").End(xlDown)).Select
+
+
 End Sub
