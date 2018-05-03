@@ -5,11 +5,16 @@ Sub Check_report()
 Debug.Print "Begin"
 Debug.Print Now
 
+
+Application.ScreenUpdating = False
+
     Dim varSheetA As Variant
     Dim varSheetB As Variant
     Dim varSheetList As Variant
     Dim varRangetoCheck As Variant
     Dim varScope As Variant
+    
+    Dim SheetListNumber As Integer
     
     Dim errArr() As Variant
     ReDim errArr(0 To 5, 0 To 0)
@@ -26,7 +31,6 @@ Debug.Print Now
     Dim wbkA As Workbook
     Dim wbkB As Workbook
     
-    Dim strRangeToCheck As String
     Dim start_Row As Integer
     Dim start_column As Integer
     
@@ -46,17 +50,15 @@ Debug.Print Now
     pathA = Worksheets(wsMacroFileSetup).Range("E5").Value
     pathB = Worksheets(wsMacroFileSetup).Range("E7").Value
 
-    strRangeToCheck = "D2:AE46"  ' If you know the data will only be in a smaller range, reduce the size of the ranges .
     
-    start_Row = Range(strRangeToCheck).Row
-    start_column = Range(strRangeToCheck).Column
-   
     Application.DisplayAlerts = False
     
     Set wbkA = Workbooks.Open(Filename:=pathA)
     Set wbkB = Workbooks.Open(Filename:=pathB)
     
-    varScope = GetSheetList(wbkB, wbMacroFile)
+    SheetListNumber = DimSheetListArray(wbkB, wbMacroFile)
+    
+    varScope = GetSheetList(wbkB, wbMacroFile, SheetListNumber)
 
     PrintArray varScope, Workbooks(wbMacroFile).Worksheets(wsMacroFileSetup).[D11]
     
@@ -69,6 +71,9 @@ Debug.Print Now
     
         ActiveSheetForCheck = varScope(iSheet, 0)
         ActiveRangeForCheck = varScope(iSheet, 1)
+        
+        start_Row = Range(ActiveRangeForCheck).Row
+        start_column = Range(ActiveRangeForCheck).Column
     
        ' Set varSheetA = wbkA.Worksheets(varScope(iSheet, 0)) ' or whatever sheet you need
         
@@ -89,7 +94,7 @@ Debug.Print Now
                     varSheetA(iRow, iCol) = Round(varSheetA(iRow, iCol), 8)
                 End If
                 
-                On Error Resume Next
+                'On Error Resume Next
                 If IsNumeric(varSheetB(iRow, iCol)) Then
                 
                     varSheetB(iRow, iCol) = Round(varSheetB(iRow, iCol), 8)
@@ -124,6 +129,8 @@ Debug.Print Now
 Debug.Print "End"
 Debug.Print Now
 
+Application.ScreenUpdating = True
+
 End Sub
 
 
@@ -137,11 +144,12 @@ Sub TransposeAndPrintArray(Data As Variant, Cl As Range)
     Cl.Resize(UBound(tData, 1), UBound(tData, 2)) = tData
 End Sub
 
-Function GetSheetList(reportWB As Workbook, wb As String) As Variant
+Function GetSheetList(reportWB As Workbook, wb As String, SheetListNumber As Integer) As Variant
     
     Dim ws As Worksheet
     Dim x As Integer
-    Dim varSheetListGrab(0 To 100, 0 To 1) As Variant
+    Dim varSheetListGrab() As Variant
+    ReDim varSheetListGrab(0 To SheetListNumber, 0 To 1)
 
     reportWB.Activate
     
@@ -156,6 +164,24 @@ Function GetSheetList(reportWB As Workbook, wb As String) As Variant
     Next ws
     
     GetSheetList = varSheetListGrab
+
+End Function
+
+Function DimSheetListArray(reportWB As Workbook, wb As String) As Integer
+    
+    Dim ws As Worksheet
+    Dim x As Integer
+    
+    reportWB.Activate
+    
+    x = -1
+
+    For Each ws In Worksheets
+        x = x + 1
+
+    Next ws
+    
+    DimSheetListArray = x
 
 End Function
 
