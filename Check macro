@@ -140,26 +140,43 @@ End Sub
 
 Sub TransposeAndPrintArray(Data As Variant, Cl As Range)
     Dim tData As Variant
-    tData = Application.Transpose(Data)
+    tData = TransposeArray(Data)
     Cl.Resize(UBound(tData, 1), UBound(tData, 2)) = tData
 End Sub
+
+Public Function TransposeArray(myarray As Variant) As Variant
+Dim X As Long
+Dim Y As Long
+Dim Xupper As Long
+Dim Yupper As Long
+Dim tempArray As Variant
+    Xupper = UBound(myarray, 2)
+    Yupper = UBound(myarray, 1)
+    ReDim tempArray(Xupper, Yupper)
+    For X = 0 To Xupper
+        For Y = 0 To Yupper
+            tempArray(X, Y) = myarray(Y, X)
+        Next Y
+    Next X
+    TransposeArray = tempArray
+End Function
 
 Function GetSheetList(reportWB As Workbook, wb As String, SheetListNumber As Integer) As Variant
     
     Dim ws As Worksheet
-    Dim x As Integer
+    Dim X As Integer
     Dim varSheetListGrab() As Variant
     ReDim varSheetListGrab(0 To SheetListNumber, 0 To 1)
 
     reportWB.Activate
     
-    x = 0
+    X = 0
 
     For Each ws In Worksheets
         
-        varSheetListGrab(x, 0) = ws.Name
-        varSheetListGrab(x, 1) = ws.PageSetup.PrintArea
-        x = x + 1
+        varSheetListGrab(X, 0) = ws.Name
+        varSheetListGrab(X, 1) = ws.PageSetup.PrintArea
+        X = X + 1
 
     Next ws
     
@@ -170,18 +187,18 @@ End Function
 Function DimSheetListArray(reportWB As Workbook, wb As String) As Integer
     
     Dim ws As Worksheet
-    Dim x As Integer
+    Dim X As Integer
     
     reportWB.Activate
     
-    x = -1
+    X = -1
 
     For Each ws In Worksheets
-        x = x + 1
+        X = X + 1
 
     Next ws
     
-    DimSheetListArray = x
+    DimSheetListArray = X
 
 End Function
 
