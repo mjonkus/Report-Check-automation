@@ -203,48 +203,4 @@ Function DimSheetListArray(reportWB As Workbook, wb As String) As Integer
 
 End Function
 
-Sub testArray()
 
-Dim arrTest() As Variant
-ReDim Preserve arrTest(0 To 1)
-Dim i As Integer
-
-
-For i = 0 To 5
-
-    arrTest(i) = "test"
-    
-    Debug.Print arrTest(i)
-Next i
-
-End Sub
-
-Sub testPrintAreaSelect()
-
-    ActiveSheet.Range(ActiveSheet.PageSetup.PrintArea).Select
-
-End Sub
-
-Sub ErrorTest()
-    
-    Dim dblValue        As Double
-      
-    On Error GoTo ErrHandler1
-    dblValue = 1 / 0
-ErrHandler1:
-    MsgBox "Exception Caught"
-    On Error GoTo 0           'Comment this line to check the effect
-    On Error GoTo ErrHandler2
-    dblValue = 1 / 0
-ErrHandler2:
-    MsgBox "Again caught it."
-        
-End Sub
-
-
-Sub testleaning()
-    Workbooks("CHECK_macro").Activate
-    Worksheets("Error_list").Range("B2", Worksheets("Error_list").Range("G2").End(xlDown)).Select
-
-
-End Sub
