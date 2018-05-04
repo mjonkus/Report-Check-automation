@@ -100,21 +100,25 @@ Application.ScreenUpdating = False
                     varSheetB(iRow, iCol) = Round(varSheetB(iRow, iCol), 8)
                 End If
                 
-                'On Error Resume Next
-                If varSheetA(iRow, iCol) = varSheetB(iRow, iCol) Then
-                    ' Cells are identical.
-                    ' Do nothing.
-                Else
-                    ' Cells are different.
-                    ' Code goes here for whatever it is you want to do.
-                    
-                    errArr(0, UBound(errArr, 2)) = varScope(iSheet, 0)
-                    errArr(1, UBound(errArr, 2)) = Cells(iRow + start_Row - 1, iCol + start_column - 1).Address(RowAbsolute:=False, ColumnAbsolute:=False)
-                    errArr(2, UBound(errArr, 2)) = iRow
-                    errArr(3, UBound(errArr, 2)) = iCol
-                    errArr(4, UBound(errArr, 2)) = varSheetA(iRow, iCol)
-                    errArr(5, UBound(errArr, 2)) = varSheetB(iRow, iCol)
-                    ReDim Preserve errArr(0 To 5, 0 To (UBound(errArr, 2) + 1))
+                If varSheetA(iRow, iCol) <> "[IGNORE]" Then
+                
+                    'On Error Resume Next
+                    If varSheetA(iRow, iCol) = varSheetB(iRow, iCol) Then
+                        ' Cells are identical.
+                        ' Do nothing.
+                    Else
+                        ' Cells are different.
+                        ' Code goes here for whatever it is you want to do.
+                        
+                        errArr(0, UBound(errArr, 2)) = varScope(iSheet, 0)
+                        errArr(1, UBound(errArr, 2)) = Cells(iRow + start_Row - 1, iCol + start_column - 1).Address(RowAbsolute:=False, ColumnAbsolute:=False)
+                        errArr(2, UBound(errArr, 2)) = iRow
+                        errArr(3, UBound(errArr, 2)) = iCol
+                        errArr(4, UBound(errArr, 2)) = varSheetA(iRow, iCol)
+                        errArr(5, UBound(errArr, 2)) = varSheetB(iRow, iCol)
+                        ReDim Preserve errArr(0 To 5, 0 To (UBound(errArr, 2) + 1))
+                        
+                    End If
                     
                 End If
             Next iCol
@@ -123,7 +127,7 @@ Application.ScreenUpdating = False
         
     
     Workbooks(wbMacroFile).Activate
-    Worksheets(wsMacroFileErrorList).Range("B2", "Z65000").Clear
+    Worksheets(wsMacroFileErrorList).Range("B2", "G65000").Clear
     Worksheets(wsMacroFileErrorList).Range("B2").Select
     TransposeAndPrintArray errArr, ActiveWorkbook.Worksheets(wsMacroFileErrorList).[B2]
 
@@ -131,6 +135,8 @@ Debug.Print "End"
 Debug.Print Now
 
 Application.ScreenUpdating = True
+
+MsgBox "Job's done." & vbCrLf & "Number of errors found " & UBound(errArr, 2), , "Done"
 
 End Sub
 
