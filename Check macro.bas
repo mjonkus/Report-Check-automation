@@ -1,7 +1,7 @@
 Option Explicit
 
 Sub Check_report()
-
+On Error GoTo err
 Debug.Print "Begin"
 Debug.Print Now
 
@@ -154,7 +154,7 @@ Application.ScreenUpdating = False
                     
                     
                         ' Cells are different.
-                        ' Writes to array sheet name, location of difference (A1 type, row and column), and source and referrence values
+                        ' Writes to array sheet name, location of difference (A1 cell type, row and column), and source and referrence values
                         errArr(0, UBound(errArr, 2)) = varScope(iSheet, 0) '
                         errArr(1, UBound(errArr, 2)) = Cells(iRow + start_Row - 1, iCol + start_column - 1).Address(RowAbsolute:=False, ColumnAbsolute:=False)
                         errArr(2, UBound(errArr, 2)) = iRow
@@ -162,7 +162,7 @@ Application.ScreenUpdating = False
                         errArr(4, UBound(errArr, 2)) = varSheetA(iRow, iCol)
                         errArr(5, UBound(errArr, 2)) = varSheetB(iRow, iCol)
                         'Adds additional line to the array for next addition to array
-                        '(VBA does not allow to extend 1st dimension of array if # of dimension more than 2)
+                        '(VBA does not allow to extend first dimension of array if # of dimension more than 2)
                         'Hence, values added to array horizontally
                         ReDim Preserve errArr(0 To 5, 0 To (UBound(errArr, 2) + 1))
                         
@@ -181,8 +181,8 @@ Application.ScreenUpdating = False
     'Clears previous error list and prints from Array "errArr" by transposing it (VBA does not allow to extend 1st dimension of array if # of dimension more than 2)
     Workbooks(wbMacroFile).Activate
     Worksheets(wsMacroFileErrorList).Range("B2", "G65000").Clear
-    Worksheets(wsMacroFileErrorList).Range("B2").Select
     TransposeAndPrintArray errArr, ActiveWorkbook.Worksheets(wsMacroFileErrorList).[B2]
+    Worksheets(wsMacroFileErrorList).Range("B2").Select
 
 Debug.Print "End"
 Debug.Print Now
@@ -193,7 +193,16 @@ EndTime = Now
 
 MsgBox "Job's done." & vbCrLf & "Number of errors found " & UBound(errArr, 2) & vbCrLf & "It took " & WorksheetFunction.Text(EndTime - StartTime, "[hh]:mm:ss"), , "Done"
 
+Done:
+    Exit Sub
+
+err:
+    MsgBox "Something wrong happened", , "Done"
+   
+
 End Sub
+
+
 
 
 Sub PrintArray(Data As Variant, Cl As Range)
@@ -270,54 +279,44 @@ Function DimSheetListArray(reportWB As Workbook, wb As String) As Integer
 
 End Function
 
+Sub browseFilePath(FileType As String)
+    On Error GoTo err
+    Dim fileExplorer As FileDialog
+    Set fileExplorer = Application.FileDialog(msoFileDialogFilePicker)
 
+    'To allow or disable to multi select
+    fileExplorer.AllowMultiSelect = False
 
-
-Sub testrangeextension()
-
-Dim A As Range
-Dim B As Variant
-Dim c As Range
-
-
-   Set A = Range("$D:$AE")
-    
-  ' B = Range(A).Rows.Count
-    
-    Set c = Range(A).Resize(69)
-     
-                    
-                    
+    With fileExplorer
+        If .Show = -1 Then 'Any file is selected
+            Select Case FileType
+                Case Is = "report"
+                    ActiveSheet.Range("E7") = .SelectedItems.Item(1)
+                Case Is = "check_file"
+                    ActiveSheet.Range("E5") = .SelectedItems.Item(1)
+            End Select
+             
+        Else ' else dialog is cancelled
+           ' I am fine if previous value stays
+           ' MsgBox "You have cancelled the dialogue"
+           ' [filePath] = "" ' when cancelled set blank as file path.
+        End If
+    End With
+err:
+    Exit Sub
 End Sub
 
 
-Sub trasposefixforprintrange()
 
-Dim A As Range
-Dim B As Range
-Dim c As Range
+Sub hyperlinks()
+'
+' Macro4 Macro
+'
 
-
-Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").Activate
-
-Debug.Print Range(Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").PageSetup.PrintArea).Rows.Count
-
-Set B = Range(Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").PageSetup.PrintArea).Resize(68)
-                    
-Debug.Print B.Address
-                    
+'
+    ActiveSheet.hyperlinks.Add Anchor:=Selection, Address:= _
+        "Z:\a. Financial\1. Actual\2018\04_2018\02. Business Update\Volume\EU_region_PMI_report\test_on_March\check_files\EU Shipment Volume Report CHECK file MJ canvas_WITHOUT_spaces_on_area.xlsb" _
+        , SubAddress:="Selection!A1", TextToDisplay:="PMI OB %"
 End Sub
 
-Sub areaspacetest()
 
-'Dim A As String
-Dim B As Variant
-Dim c As Variant
-
-
-Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").Activate
-B = Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").Range("D23:F35")
-c = B(1, 1)
-Debug.Print B(1, 1)
-Debug.Print c
-End Sub
