@@ -40,6 +40,15 @@ Application.ScreenUpdating = False
     
     Dim ActiveSheetForCheck As String
     Dim ActiveRangeForCheck As String
+    
+    Dim DecNumA As Integer
+    Dim DecNumB As Integer
+    Dim DecNumAB As Integer
+    Dim DecNumFinalRounding As Integer
+    Dim DecNumLimit As Integer
+    
+    DecNumLimit = 4 ' limits rounding to at least 4 digits to avoid issues with percentages
+    
 
     wbMacroFile = "CHECK_macro"
     wsMacroFileSetup = "Macro_setup"
@@ -62,8 +71,10 @@ Application.ScreenUpdating = False
 
     PrintArray varScope, Workbooks(wbMacroFile).Worksheets(wsMacroFileSetup).[D11]
     
-    Set varSheetA = wbkA.Worksheets("Cover Region") ' or whatever sheet you need
-    Set varSheetB = wbkB.Worksheets("Cover Region") ' or whatever sheet you need
+    Set varSheetA = wbkA.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
+    Set varSheetB = wbkB.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
+    
+    
     
     For iSheet = LBound(varScope, 1) To UBound(varScope, 1)
     
@@ -75,14 +86,13 @@ Application.ScreenUpdating = False
         start_Row = Range(ActiveRangeForCheck).Row
         start_column = Range(ActiveRangeForCheck).Column
     
-       ' Set varSheetA = wbkA.Worksheets(varScope(iSheet, 0)) ' or whatever sheet you need
-        
-        varSheetA = wbkA.Worksheets(ActiveSheetForCheck).Range(ActiveRangeForCheck)
-        
-        
-       ' Set varSheetB = wbkB.Worksheets(varScope(iSheet, 0)) ' or whatever sheet you need
        
-        varSheetB = wbkB.Worksheets(ActiveSheetForCheck).Range(ActiveRangeForCheck) ' or whatever your other sheet is.
+        
+        varSheetA = wbkA.Worksheets(ActiveSheetForCheck).Range(ActiveRangeForCheck) ' loads data from check file to excel memory
+        
+        
+       
+        varSheetB = wbkB.Worksheets(ActiveSheetForCheck).Range(ActiveRangeForCheck) ' loads data from report to excel memory
              
         
         
@@ -90,32 +100,53 @@ Application.ScreenUpdating = False
     
         For iRow = LBound(varSheetA, 1) To UBound(varSheetA, 1)
             For iCol = LBound(varSheetA, 2) To UBound(varSheetA, 2)
-                If IsNumeric(varSheetA(iRow, iCol)) Then
-                    varSheetA(iRow, iCol) = Round(varSheetA(iRow, iCol), 8)
+            On Error Resume Next
+                If IsNumeric(varSheetA(iRow, iCol)) And IsNumeric(varSheetB(iRow, iCol)) Then
+                    
+                    DecNumA = Len(CStr(varSheetA(iRow, iCol))) - InStr(CStr(varSheetA(iRow, iCol)), ".")
+                    DecNumB = Len(CStr(varSheetB(iRow, iCol))) - InStr(CStr(varSheetB(iRow, iCol)), ".")
+                    
+                    'Min function
+                    'excel VBA does not have min or max function, hence using workaround
+                    If DecNumA < DecNumB Then
+                        DecNumAB = DecNumA
+                    Else
+                        DecNumAB = DecNumB
+                    End If
+                        
+                    'Max function
+                    'excel VBA does not have min or max function, hence using workaround
+                    If DecNumLimit > DecNumAB Then
+                        DecNumFinalRounding = DecNumLimit
+                    Else
+                        DecNumFinalRounding = DecNumAB
+                    End If
+                    
+                        
+                    'rounding variable to the shortest number in comparison (but rounding not more than 4 digits after comma)
+                    varSheetA(iRow, iCol) = Round(varSheetA(iRow, iCol), DecNumFinalRounding)
+                    varSheetB(iRow, iCol) = Round(varSheetB(iRow, iCol), DecNumFinalRounding)
+                    
                 End If
                 
-                On Error Resume Next
-                If IsNumeric(varSheetB(iRow, iCol)) Then
+                If varSheetA(iRow, iCol) <> "[IGNORE]" Then ' Skips marked cells in check file as was intended to be skipped
                 
-                    varSheetB(iRow, iCol) = Round(varSheetB(iRow, iCol), 8)
-                End If
                 
-                If varSheetA(iRow, iCol) <> "[IGNORE]" Then
-                
-                    'On Error Resume Next
                     If varSheetA(iRow, iCol) = varSheetB(iRow, iCol) Then
                         ' Cells are identical.
                         ' Do nothing.
                     Else
                         ' Cells are different.
-                        ' Code goes here for whatever it is you want to do.
-                        
-                        errArr(0, UBound(errArr, 2)) = varScope(iSheet, 0)
+                        ' Writes to array sheet name, location of difference (A1 type, row and column), and source and referrence values
+                        errArr(0, UBound(errArr, 2)) = varScope(iSheet, 0) '
                         errArr(1, UBound(errArr, 2)) = Cells(iRow + start_Row - 1, iCol + start_column - 1).Address(RowAbsolute:=False, ColumnAbsolute:=False)
                         errArr(2, UBound(errArr, 2)) = iRow
                         errArr(3, UBound(errArr, 2)) = iCol
                         errArr(4, UBound(errArr, 2)) = varSheetA(iRow, iCol)
                         errArr(5, UBound(errArr, 2)) = varSheetB(iRow, iCol)
+                        'Adds additional line to the array for next addition to array
+                        '(VBA does not allow to extend 1st dimension of array if # of dimension more than 2)
+                        'Hence, values added to array horizontally
                         ReDim Preserve errArr(0 To 5, 0 To (UBound(errArr, 2) + 1))
                         
                     End If
@@ -125,7 +156,7 @@ Application.ScreenUpdating = False
         Next iRow
     Next iSheet
         
-    
+    'Clears previous error list and prints from Array "errArr" by transposing it (VBA does not allow to extend 1st dimension of array if # of dimension more than 2)
     Workbooks(wbMacroFile).Activate
     Worksheets(wsMacroFileErrorList).Range("B2", "G65000").Clear
     Worksheets(wsMacroFileErrorList).Range("B2").Select
