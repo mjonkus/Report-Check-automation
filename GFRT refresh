@@ -1,0 +1,22 @@
+Private Sub CommandButton1_Click()
+    
+    Dim aCtrlBar As CommandBar
+    
+    On Error Resume Next
+    
+    
+    Application.ScreenUpdating = False
+    ThisWorkbook.Sheets(2).Select
+    ThisWorkbook.Sheets(2).Range("A2").Select
+    Set aCtrlBar = Application.CommandBars("cell-by-cell")
+    If Not (aCtrlBar Is Nothing) Then
+        ThisWorkbook.Sheets(2).Range("a2:iv65000").ClearContents
+        ThisWorkbook.Sheets(2).Range("A2").Select
+        aCtrlBar.Controls(4).Execute
+    End If
+    
+    ThisWorkbook.Sheets(1).PivotTables("PivotTable1").PivotCache.Refresh
+    ThisWorkbook.Sheets(1).Select
+    Application.ScreenUpdating = True
+    
+End Sub
