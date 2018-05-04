@@ -8,6 +8,11 @@ Debug.Print Now
 
 Application.ScreenUpdating = False
 
+    Dim StartTime As Date
+    Dim EndTime As Date
+    
+    StartTime = Now
+
     Dim varSheetA As Variant
     Dim varSheetB As Variant
     Dim varSheetList As Variant
@@ -43,12 +48,15 @@ Application.ScreenUpdating = False
     
     Dim DecNumA As Integer
     Dim DecNumB As Integer
-    Dim DecNumAB As Integer
+    Dim DecNumAnB As Integer
     Dim DecNumFinalRounding As Integer
-    Dim DecNumLimit As Integer
+    Dim DecNumLLimit As Integer
+    Dim DecNumULimit As Integer
     
-    DecNumLimit = 4 ' limits rounding to at least 4 digits to avoid issues with percentages
-    
+    DecNumA = 0
+    DecNumB = 0
+    DecNumLLimit = 4 ' limits rounding to at least 4 digits to avoid issues with percentages
+    DecNumULimit = 7
 
     wbMacroFile = "CHECK_macro"
     wsMacroFileSetup = "Macro_setup"
@@ -71,8 +79,9 @@ Application.ScreenUpdating = False
 
     PrintArray varScope, Workbooks(wbMacroFile).Worksheets(wsMacroFileSetup).[D11]
     
-    Set varSheetA = wbkA.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
-    Set varSheetB = wbkB.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
+    'is this really needed? looks like it works without. keeping for now
+    'Set varSheetA = wbkA.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
+    'Set varSheetB = wbkB.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
     
     
     
@@ -94,7 +103,7 @@ Application.ScreenUpdating = False
        
         varSheetB = wbkB.Worksheets(ActiveSheetForCheck).Range(ActiveRangeForCheck) ' loads data from report to excel memory
              
-        
+       
         
         Application.DisplayAlerts = True
     
@@ -103,29 +112,34 @@ Application.ScreenUpdating = False
             On Error Resume Next
                 If IsNumeric(varSheetA(iRow, iCol)) And IsNumeric(varSheetB(iRow, iCol)) Then
                     
-                    DecNumA = Len(CStr(varSheetA(iRow, iCol))) - InStr(CStr(varSheetA(iRow, iCol)), ".")
-                    DecNumB = Len(CStr(varSheetB(iRow, iCol))) - InStr(CStr(varSheetB(iRow, iCol)), ".")
+                    DecNumA = ((Len(CStr(varSheetA(iRow, iCol))) - InStr(CStr(varSheetA(iRow, iCol)), ".")))
+                    
+                    
+                   
+                    DecNumB = (Len(CStr(varSheetB(iRow, iCol))) - InStr(CStr(varSheetB(iRow, iCol)), "."))
                     
                     'Min function
                     'excel VBA does not have min or max function, hence using workaround
                     If DecNumA < DecNumB Then
-                        DecNumAB = DecNumA
+                        DecNumAnB = DecNumA
                     Else
-                        DecNumAB = DecNumB
+                        DecNumAnB = DecNumB
                     End If
                         
-                    'Max function
-                    'excel VBA does not have min or max function, hence using workaround
-                    If DecNumLimit > DecNumAB Then
-                        DecNumFinalRounding = DecNumLimit
-                    Else
-                        DecNumFinalRounding = DecNumAB
-                    End If
+                    'Round to the shortest len of number but still within min and max limits
+                    Select Case DecNumAnB
+                        Case Is < DecNumLLimit
+                            DecNumFinalRounding = DecNumLLimit
+                        Case Is > DecNumULimit
+                            DecNumFinalRounding = DecNumULimit
+                        Case Else
+                            DecNumFinalRounding = DecNumAnB
+                    End Select
                     
                         
                     'rounding variable to the shortest number in comparison (but rounding not more than 4 digits after comma)
-                    varSheetA(iRow, iCol) = Round(varSheetA(iRow, iCol), DecNumFinalRounding)
-                    varSheetB(iRow, iCol) = Round(varSheetB(iRow, iCol), DecNumFinalRounding)
+                    varSheetA(iRow, iCol) = WorksheetFunction.Round(varSheetA(iRow, iCol), DecNumFinalRounding)
+                    varSheetB(iRow, iCol) = WorksheetFunction.Round(varSheetB(iRow, iCol), DecNumFinalRounding)
                     
                 End If
                 
@@ -136,6 +150,9 @@ Application.ScreenUpdating = False
                         ' Cells are identical.
                         ' Do nothing.
                     Else
+                    
+                    
+                    
                         ' Cells are different.
                         ' Writes to array sheet name, location of difference (A1 type, row and column), and source and referrence values
                         errArr(0, UBound(errArr, 2)) = varScope(iSheet, 0) '
@@ -152,6 +169,11 @@ Application.ScreenUpdating = False
                     End If
                     
                 End If
+                 'debug
+                    If iSheet = 3 And iRow = 24 And iCol = 1 Then
+                       ' Stop
+                    End If
+                    'end debug
             Next iCol
         Next iRow
     Next iSheet
@@ -167,7 +189,9 @@ Debug.Print Now
 
 Application.ScreenUpdating = True
 
-MsgBox "Job's done." & vbCrLf & "Number of errors found " & UBound(errArr, 2), , "Done"
+EndTime = Now
+
+MsgBox "Job's done." & vbCrLf & "Number of errors found " & UBound(errArr, 2) & vbCrLf & "It took " & WorksheetFunction.Text(EndTime - StartTime, "[hh]:mm:ss"), , "Done"
 
 End Sub
 
@@ -205,6 +229,7 @@ Function GetSheetList(reportWB As Workbook, wb As String, SheetListNumber As Int
     Dim X As Integer
     Dim varSheetListGrab() As Variant
     ReDim varSheetListGrab(0 To SheetListNumber, 0 To 1)
+    Dim PrintAreaSize As Variant
 
     reportWB.Activate
     
@@ -213,7 +238,12 @@ Function GetSheetList(reportWB As Workbook, wb As String, SheetListNumber As Int
     For Each ws In Worksheets
         
         varSheetListGrab(X, 0) = ws.Name
-        varSheetListGrab(X, 1) = ws.PageSetup.PrintArea
+        
+        If Range(ws.PageSetup.PrintArea).Rows.Count > 1000 Then
+            varSheetListGrab(X, 1) = Range(ws.PageSetup.PrintArea).Resize(68).Address
+        Else
+            varSheetListGrab(X, 1) = ws.PageSetup.PrintArea
+        End If
         X = X + 1
 
     Next ws
@@ -241,3 +271,53 @@ Function DimSheetListArray(reportWB As Workbook, wb As String) As Integer
 End Function
 
 
+
+
+Sub testrangeextension()
+
+Dim A As Range
+Dim B As Variant
+Dim c As Range
+
+
+   Set A = Range("$D:$AE")
+    
+  ' B = Range(A).Rows.Count
+    
+    Set c = Range(A).Resize(69)
+     
+                    
+                    
+End Sub
+
+
+Sub trasposefixforprintrange()
+
+Dim A As Range
+Dim B As Range
+Dim c As Range
+
+
+Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").Activate
+
+Debug.Print Range(Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").PageSetup.PrintArea).Rows.Count
+
+Set B = Range(Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").PageSetup.PrintArea).Resize(68)
+                    
+Debug.Print B.Address
+                    
+End Sub
+
+Sub areaspacetest()
+
+'Dim A As String
+Dim B As Variant
+Dim c As Variant
+
+
+Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").Activate
+B = Workbooks("EU Regional Package Actuals").Worksheets("Cig Vol DATA").Range("D23:F35")
+c = B(1, 1)
+Debug.Print B(1, 1)
+Debug.Print c
+End Sub
