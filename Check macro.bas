@@ -141,6 +141,11 @@ Application.ScreenUpdating = False
                     varSheetA(iRow, iCol) = WorksheetFunction.Round(varSheetA(iRow, iCol), DecNumFinalRounding)
                     varSheetB(iRow, iCol) = WorksheetFunction.Round(varSheetB(iRow, iCol), DecNumFinalRounding)
                     
+                Else
+                
+                   varSheetA(iRow, iCol) = Trim(varSheetA(iRow, iCol))
+                   varSheetB(iRow, iCol) = Trim(varSheetB(iRow, iCol))
+                    
                 End If
                 
                 If varSheetA(iRow, iCol) <> "[IGNORE]" Then ' Skips marked cells in check file as was intended to be skipped
@@ -308,6 +313,8 @@ End Sub
 
 Sub CopyBrandlist(wbkA As Workbook, wbkB As Workbook)
 
+    Dim shOTP_vol As String
+    Dim shOTP_YTD_YTG As String
     Dim shTopBrands As String
     Dim shBrands1 As String
     Dim shBrands2 As String
@@ -316,29 +323,31 @@ Sub CopyBrandlist(wbkA As Workbook, wbkB As Workbook)
     Dim sheetName As Variant
     
     
-    
-    Dim list As Variant
+    shOTP_vol = "OTP Vol DATA"
+    shOTP_YTD_YTG = "OTP Vol YTD_YTG DATA"
     
     shTopBrands = "Vol Top 30 Brands"
     shBrands1 = "BF1 T30 Market Group"
     shBrands2 = "BF2 T30 Market Group"
     shBrands3 = "BF3 T30 Market Group"
     
-    shBrands = Array(shBrands1, shBrands2, shBrands3)
+    'copy list for OTP vol DATA
+        wbkA.Worksheets(shOTP_vol).Range("D10:D21") = wbkB.Worksheets(shOTP_vol).Range("D10:D21").Value
+        wbkA.Worksheets(shOTP_vol).Range("D27:D51") = wbkB.Worksheets(shOTP_vol).Range("D27:D51").Value
     
-        'copy list of top brands
-        list = wbkB.Worksheets(shTopBrands).Range("C11:C40").Value
-        wbkA.Worksheets(shTopBrands).Range("C11:C40") = list
-        list = ""
-        list = wbkB.Worksheets(shTopBrands).Range("C43:C54").Value
-        wbkA.Worksheets(shTopBrands).Range("C43:C54") = list
-        list = ""
+    'copy list for OTP YTD YTG
+        wbkA.Worksheets(shOTP_YTD_YTG).Range("D10:D21") = wbkB.Worksheets(shOTP_YTD_YTG).Range("D10:D21").Value
+        wbkA.Worksheets(shOTP_YTD_YTG).Range("D27:D51") = wbkB.Worksheets(shOTP_YTD_YTG).Range("D27:D51").Value
+    
+    
+    'copy list of top brands
+        wbkA.Worksheets(shTopBrands).Range("C11:C40") = wbkB.Worksheets(shTopBrands).Range("C11:C40").Value
+        wbkA.Worksheets(shTopBrands).Range("C43:C54") = wbkB.Worksheets(shTopBrands).Range("C43:C54").Value
         
     'copy list of markets for top3 brands
+    shBrands = Array(shBrands1, shBrands2, shBrands3)
     For Each sheetName In shBrands
-        list = wbkB.Worksheets(sheetName).Range("C11:C40").Value
-        wbkA.Worksheets(sheetName).Range("C11:C40") = list
-        list = ""
+        wbkA.Worksheets(sheetName).Range("C11:C40") = wbkB.Worksheets(sheetName).Range("C11:C40").Value
     Next sheetName
     
 
