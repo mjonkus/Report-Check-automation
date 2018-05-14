@@ -1,7 +1,7 @@
 Option Explicit
 
 Sub Check_report()
-On Error GoTo err
+'On Error GoTo err
 Debug.Print "Begin"
 Debug.Print Now
 
@@ -83,7 +83,7 @@ Application.ScreenUpdating = False
     'Set varSheetA = wbkA.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
     'Set varSheetB = wbkB.Worksheets("Cover Region") ' can be any sheet in the file. Needed to asign object to variable
     
-    
+    CopyBrandlist wbkA, wbkB ' copy list of brands and markets to match report sorting
     
     For iSheet = LBound(varScope, 1) To UBound(varScope, 1)
     
@@ -306,7 +306,28 @@ err:
     Exit Sub
 End Sub
 
+Sub CopyBrandlist(wbkA As Workbook, wbkB As Workbook)
 
+    Dim shTopBrands As String
+    Dim shBrands1 As String
+    Dim shBrands2 As String
+    Dim shBrands3 As String
+    
+    Dim list As Variant
+    
+    shTopBrands = "Vol Top 30 Brands"
+    shBrands1 = "BF1 T30 Market Group"
+    shBrands2 = "BF2 T30 Market Group"
+    shBrands3 = "BF3 T30 Market Group"
+    
+    list = wbkB.Worksheets(shTopBrands).Range("C11:C40").Value
+    
+    wbkA.Worksheets(shTopBrands).Range("C11:C40") = list
+    
+    list = ""
+    
+
+End Sub
 
 Sub hyperlinks()
 '
@@ -318,5 +339,4 @@ Sub hyperlinks()
         "Z:\a. Financial\1. Actual\2018\04_2018\02. Business Update\Volume\EU_region_PMI_report\test_on_March\check_files\EU Shipment Volume Report CHECK file MJ canvas_WITHOUT_spaces_on_area.xlsb" _
         , SubAddress:="Selection!A1", TextToDisplay:="PMI OB %"
 End Sub
-
 
