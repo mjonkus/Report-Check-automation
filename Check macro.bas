@@ -216,7 +216,7 @@ Sub TransposeAndPrintArray(Data As Variant, Cl As Range)
 End Sub
 
 Public Function TransposeArray(myarray As Variant) As Variant
-Dim X As Long
+Dim x As Long
 Dim Y As Long
 Dim Xupper As Long
 Dim Yupper As Long
@@ -224,36 +224,36 @@ Dim tempArray As Variant
     Xupper = UBound(myarray, 2)
     Yupper = UBound(myarray, 1)
     ReDim tempArray(Xupper, Yupper)
-    For X = 0 To Xupper
+    For x = 0 To Xupper
         For Y = 0 To Yupper
-            tempArray(X, Y) = myarray(Y, X)
+            tempArray(x, Y) = myarray(Y, x)
         Next Y
-    Next X
+    Next x
     TransposeArray = tempArray
 End Function
 
 Function GetSheetList(reportWB As Workbook, wb As String, SheetListNumber As Integer) As Variant
     
     Dim ws As Worksheet
-    Dim X As Integer
+    Dim x As Integer
     Dim varSheetListGrab() As Variant
     ReDim varSheetListGrab(0 To SheetListNumber, 0 To 1)
     Dim PrintAreaSize As Variant
 
     reportWB.Activate
     
-    X = 0
+    x = 0
 
     For Each ws In Worksheets
         
-        varSheetListGrab(X, 0) = ws.Name
+        varSheetListGrab(x, 0) = ws.Name
         
         If Range(ws.PageSetup.PrintArea).Rows.Count > 1000 Then
-            varSheetListGrab(X, 1) = Range(ws.PageSetup.PrintArea).Resize(68).Address
+            varSheetListGrab(x, 1) = Range(ws.PageSetup.PrintArea).Resize(68).Address
         Else
-            varSheetListGrab(X, 1) = ws.PageSetup.PrintArea
+            varSheetListGrab(x, 1) = ws.PageSetup.PrintArea
         End If
-        X = X + 1
+        x = x + 1
 
     Next ws
     
@@ -264,18 +264,18 @@ End Function
 Function DimSheetListArray(reportWB As Workbook, wb As String) As Integer
     
     Dim ws As Worksheet
-    Dim X As Integer
+    Dim x As Integer
     
     reportWB.Activate
     
-    X = -1
+    x = -1
 
     For Each ws In Worksheets
-        X = X + 1
+        x = x + 1
 
     Next ws
     
-    DimSheetListArray = X
+    DimSheetListArray = x
 
 End Function
 
@@ -312,6 +312,10 @@ Sub CopyBrandlist(wbkA As Workbook, wbkB As Workbook)
     Dim shBrands1 As String
     Dim shBrands2 As String
     Dim shBrands3 As String
+    Dim shBrands As Variant
+    Dim sheetName As Variant
+    
+    
     
     Dim list As Variant
     
@@ -320,11 +324,22 @@ Sub CopyBrandlist(wbkA As Workbook, wbkB As Workbook)
     shBrands2 = "BF2 T30 Market Group"
     shBrands3 = "BF3 T30 Market Group"
     
-    list = wbkB.Worksheets(shTopBrands).Range("C11:C40").Value
+    shBrands = Array(shBrands1, shBrands2, shBrands3)
     
-    wbkA.Worksheets(shTopBrands).Range("C11:C40") = list
-    
-    list = ""
+        'copy list of top brands
+        list = wbkB.Worksheets(shTopBrands).Range("C11:C40").Value
+        wbkA.Worksheets(shTopBrands).Range("C11:C40") = list
+        list = ""
+        list = wbkB.Worksheets(shTopBrands).Range("C43:C54").Value
+        wbkA.Worksheets(shTopBrands).Range("C43:C54") = list
+        list = ""
+        
+    'copy list of markets for top3 brands
+    For Each sheetName In shBrands
+        list = wbkB.Worksheets(sheetName).Range("C11:C40").Value
+        wbkA.Worksheets(sheetName).Range("C11:C40") = list
+        list = ""
+    Next sheetName
     
 
 End Sub
